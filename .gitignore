@@ -65,3 +65,10 @@ yarn-debug.log*
 # Ignore uploaded files in development
 /storage/*
 !/storage/.keep
+
+# IDE folder
+.idea/
+scratch.rb
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key
