@@ -18,7 +18,7 @@ Rails.application.configure do
     config.action_controller.perform_caching = true
     config.action_controller.enable_fragment_cache_logging = true
 
-    config.cache_store = :memory_store
+    config.cache_store = :file_store, "#{root}/tmp/cache/"
     config.public_file_server.headers = {
       'Cache-Control' => "public, max-age=#{2.days.to_i}"
     }
@@ -35,6 +35,19 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = false
 
   config.action_mailer.perform_caching = false
+
+  # Logging
+
+  # Print Rails log to console
+  config.logger = Logger.new(STDOUT)
+
+  # Print Rails log to log/development.log
+  file_logger = Logger.new(Rails.root.join("log/development.log"))
+  config.logger.extend(ActiveSupport::Logger.broadcast(file_logger))
+
+  # Append LOG_LEVEL to adjust the logging level.
+  # e.g. bundle exec rails server LOG_LEVEL=error
+  config.log_level = ENV.fetch("LOG_LEVEL", :debug)
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
