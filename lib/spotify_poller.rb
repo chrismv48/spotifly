@@ -84,22 +84,3 @@ class SpotifyPoller
     }
   end
 end
-
-poller = SpotifyPoller.new
-# currently_playing = {
-#   play: {
-#     track_id: "1198fdk82",
-#     progress_ms: 12345,
-#     playlist_id: "3298329"
-#   },
-#   track: {
-#     id: "1198fdk82",
-#     name: "Foo",
-#     duration_ms: 443455,
-#     popularity: 0.43
-#   },
-#   artists: [{id: "j9fd89fh", name: "Zork"}, {id: "h9fd8fh", name: "Biggue"}]
-# }
-
-poller.run!
-

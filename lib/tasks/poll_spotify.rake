@@ -1,6 +1,5 @@
 require "spotify_poller"
-
-namespace :poll_spotify do
+task :poll_spotify do
   poller = SpotifyPoller.new
   poller.run!
 end
