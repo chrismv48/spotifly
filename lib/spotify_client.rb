@@ -9,6 +9,8 @@ class SpotifyClient
   CLIENT_ID = Rails.application.credentials.spotify[:client_id]
   CLIENT_SECRET = Rails.application.credentials.spotify[:client_secret]
 
+  DEFAULT_USER_ID = 1
+
   AUTH_CODE = "AQCZ82jCyxKBUiIG1tRc_WwGi1V5z5Hmt6JgoJtHWPtB8hcf7QDVXG5UmbdQ9IFFk065IMFikPxPV6aYIKQxtSmvC5eQowjDVhlqOZm3dgetrXQHrwedI4PTAewjwNWa4rbXMbb77FP5lSD-QFdyfZdWX2MNtoxmaokoYhcNmgvRnuPTWmO3MNBzH9UpTn9OST3wZg"
   REDIRECT_URI = "http://localhost:3000/spotify_auth/oauth_callback".freeze
 
@@ -35,19 +37,22 @@ class SpotifyClient
 
   BASE_URL = "https://api.spotify.com/v1/me"
 
-  def initialize(access_token: nil)
-    if access_token.nil?
-      access_token = Rails.cache.read("access_token")
-    end
-
-    @access_token = access_token
-
+  def initialize
+    @user_token_data = SpotifyUserToken.find_or_create_by!(id: DEFAULT_USER_ID)
     @http = HTTP.use(logging: {logger: Rails.logger})
+
+    if @user_token_data.access_token.nil?
+      if @user_token_data.oauth_code
+        get_access_token!
+      else
+        raise "No access token/oauth code found, go get it: #{get_user_authorization_url}"
+      end
+    end
   end
 
   def request
     @http
-      .auth("Bearer #{@access_token}")
+      .auth("Bearer #{@user_token_data.access_token}")
       .headers(
         accept: "application/json",
         content_type: "application/json"
@@ -58,7 +63,7 @@ class SpotifyClient
     response = request.get(*args)
 
     if token_needs_to_be_refreshed?(response)
-      refresh_access_token
+      refresh_access_token!
       response = request.get(*args)
     end
 
@@ -98,12 +103,10 @@ class SpotifyClient
     return resp["Location"]
   end
 
-  def refresh_access_token(refresh_token: nil)
+  def refresh_access_token!
     refresh_token_url = "https://accounts.spotify.com/api/token"
 
-    if refresh_token.nil?
-      refresh_token = Rails.cache.read("refresh_token")
-    end
+    refresh_token = @user_token_data.refresh_token
 
     params = {
       client_id: CLIENT_ID,
@@ -124,12 +127,13 @@ class SpotifyClient
     end
 
     parsed_response = resp.parse
-    Rails.cache.write("access_token", parsed_response["access_token"])
-    @access_token = parsed_response["access_token"]
+    @user_token_data.access_token = parsed_response["access_token"]
 
     if parsed_response["refresh_token"].present?
-      Rails.cache.write("refresh_token", parsed_response["refresh_token"])
+      @user_token_data.refresh_token = parsed_response["refresh_token"]
     end
+
+    @user_token_data.save!
   end
 
   def token_needs_to_be_refreshed?(response)
@@ -140,14 +144,14 @@ class SpotifyClient
     return false
   end
 
-  def get_access_token(oauth_code:)
+  def get_access_token!
     access_token_url = "https://accounts.spotify.com/api/token"
 
     params = {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       grant_type: "authorization_code",
-      code: oauth_code,
+      code: @user_token_data.oauth_code,
       redirect_uri: REDIRECT_URI,
     }
 
@@ -164,8 +168,9 @@ class SpotifyClient
     end
 
     parsed_response = resp.parse
-    Rails.cache.write("access_token", parsed_response["access_token"])
-    Rails.cache.write("refresh_token", parsed_response["refresh_token"])
-    @access_token = parsed_response["access_token"]
+
+    @user_token_data.access_token = parsed_response["access_token"]
+    @user_token_data.refresh_token = parsed_response["refresh_token"]
+    @user_token_data.save!
   end
 end

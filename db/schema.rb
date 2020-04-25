@@ -42,8 +42,9 @@ ActiveRecord::Schema.define(version: 2020_04_24_210817) do
 
   create_table "spotify_user_tokens", force: :cascade do |t|
     t.integer "user_id"
-    t.string "access_token", null: false
+    t.string "access_token"
     t.string "refresh_token"
+    t.string "oauth_code"
     t.datetime "expires_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
