@@ -1,4 +1,5 @@
 require 'http'
+require 'url_generator'
 
 # For auth flow, see https://developer.spotify.com/documentation/general/guides/authorization-guide/
 
@@ -8,8 +9,6 @@ class SpotifyClient
   CLIENT_SECRET = Rails.application.credentials.spotify[:client_secret]
 
   DEFAULT_USER_ID = 1
-
-  REDIRECT_URI = "http://localhost:3000/spotify_auth/oauth_callback".freeze
 
   SCOPES = [
     "user-read-playback-state",
@@ -77,7 +76,7 @@ class SpotifyClient
     params = {
       client_id: CLIENT_ID,
       response_type: 'code',
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: UrlGenerator.new.spotify_oauth_callback_url,
       scope: SCOPES.join(" ")
     }
 
@@ -134,7 +133,7 @@ class SpotifyClient
       client_secret: CLIENT_SECRET,
       grant_type: "authorization_code",
       code: @user_token_data.oauth_code,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: UrlGenerator.new.spotify_oauth_callback_url,
     }
 
     request = @http
