@@ -4,14 +4,11 @@ require 'http'
 
 class SpotifyClient
 
-  attr_reader :access_token
-
   CLIENT_ID = Rails.application.credentials.spotify[:client_id]
   CLIENT_SECRET = Rails.application.credentials.spotify[:client_secret]
 
   DEFAULT_USER_ID = 1
 
-  AUTH_CODE = "AQCZ82jCyxKBUiIG1tRc_WwGi1V5z5Hmt6JgoJtHWPtB8hcf7QDVXG5UmbdQ9IFFk065IMFikPxPV6aYIKQxtSmvC5eQowjDVhlqOZm3dgetrXQHrwedI4PTAewjwNWa4rbXMbb77FP5lSD-QFdyfZdWX2MNtoxmaokoYhcNmgvRnuPTWmO3MNBzH9UpTn9OST3wZg"
   REDIRECT_URI = "http://localhost:3000/spotify_auth/oauth_callback".freeze
 
   SCOPES = [
@@ -72,21 +69,6 @@ class SpotifyClient
 
   def get_currently_playing
     response = self.get(BASE_URL + "/player/currently-playing")
-    # 204 means nothing is playing
-    if response.code == 200
-      parsed_response = response.parse
-      # FYI: it's possible for this to return a track that's paused (check is_playing)
-      timestamp = parsed_response["timestamp"]
-      progress_ms = parsed_response["progress_ms"]
-      item = parsed_response["item"]
-      item_id = item["id"]
-      item_duration_ms = item["duration_ms"]
-      item_name = item["name"]
-      item_popularity = item["popularity"]
-      artists = item["artists"].map { |artist| artist.slice('id', 'name') }
-
-
-    end
     return response
   end
 
