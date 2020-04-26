@@ -6,13 +6,15 @@ class SpotifyPoller
   MAX_SLEEP_DURATION = 3
   MIN_SLEEP_DURATION = 0.5
 
+  DEFAULT_RUN_UNTIL_HOUR = 23 # 11pm
+
   def run!
     sc = SpotifyClient.new
 
-    now = Time.now
+    run_until = Time.now.change({ hour: DEFAULT_RUN_UNTIL_HOUR, min: 0, sec: 0 })
     previously_playing = nil
 
-    loop do
+    while Time.now < run_until
       resp = sc.get_currently_playing
       if resp.code == 204
         Rails.logger.info("Nothing playing...")
@@ -45,9 +47,6 @@ class SpotifyPoller
       Rails.logger.info `ps -o rss= -p #{$$}`.to_i
       sleep(sleep_duration)
     end
-
-    end_time = Time.now
-    Rails.logger.info end_time - now
   end
 
   def persist_currently_playing!(currently_playing)
