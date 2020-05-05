@@ -7,7 +7,7 @@ class SpotifyPlaylist
   DESCRIPTION_KEYWORD = "!dynamic" # let's us know this playlist should be considered
   MAX_PLAYLIST_SIZE = 100
   MIN_PLAYLIST_SIZE = 20
-  PLAYLIST_GROWTH_RATE = 1.3
+  TARGET_PCT_TRACKS_PLAYED = 0.65
 
   def initialize(playlist)
     @playlist = playlist
@@ -66,8 +66,9 @@ class SpotifyPlaylist
 
   def num_tracks_to_add
     current_count = @playlist.active_tracks.size
-    new_count = (current_count * PLAYLIST_GROWTH_RATE * pct_tracks_played).to_i
-    return new_count.clamp(MIN_PLAYLIST_SIZE, MAX_PLAYLIST_SIZE) - current_count
+    num_played_tracks = @playlist.active_tracks.count {|track| track.plays.any?}
+    new_count = [(num_played_tracks / TARGET_PCT_TRACKS_PLAYED).to_i, current_count].max
+    return [new_count.clamp(MIN_PLAYLIST_SIZE, MAX_PLAYLIST_SIZE) - current_count, 0].max
   end
 
   class << self

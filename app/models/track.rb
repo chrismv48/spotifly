@@ -33,9 +33,11 @@ class Track < ApplicationRecord
     def create_from_item(track_item)
       ActiveRecord::Base.transaction do
         track_item.deep_symbolize_keys!
-        track = find_or_create_by(track_item.slice(*Track.attributes))
+        track = find_or_create_by(track_item.slice(:id)) do |track|
+          track.assign_attributes(track_item.slice(*Track.attributes))
+        end
 
-        if track.id_previously_changed?   # was it already created?
+        unless track.id_previously_changed?   # was it newly created?
           return track
         end
 

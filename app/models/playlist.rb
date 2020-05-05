@@ -40,8 +40,7 @@ class Playlist < ApplicationRecord
       ActiveRecord::Base.transaction do
         playlist_item.deep_symbolize_keys!
 
-        playlist = Playlist
-                     .find_or_initialize_by(id: playlist_item[:id])
+        playlist = Playlist.find_or_initialize_by(id: playlist_item[:id])
 
         playlist.update_attributes!(
           {
