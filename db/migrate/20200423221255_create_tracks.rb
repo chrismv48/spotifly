@@ -1,6 +1,6 @@
 class CreateTracks < ActiveRecord::Migration[6.0]
   def change
-    create_table :tracks, id: false do |t|
+    create_table :track_items, id: false do |t|
       t.string :id, primary_key: true
       t.string :name
       t.integer :duration_ms

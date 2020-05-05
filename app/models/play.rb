@@ -16,4 +16,10 @@
 #
 class Play < ApplicationRecord
   belongs_to :track
+
+  SKIP_THRESHOLD = 0.3
+
+  def skipped?
+    return (self.progress_ms / self.track.duration_ms.to_f) < SKIP_THRESHOLD
+  end
 end

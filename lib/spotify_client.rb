@@ -5,6 +5,8 @@ require 'url_generator'
 
 class SpotifyClient
 
+  attr_reader :user_token_data
+
   CLIENT_ID = Rails.application.credentials.spotify[:client_id]
   CLIENT_SECRET = Rails.application.credentials.spotify[:client_secret]
 
@@ -33,8 +35,8 @@ class SpotifyClient
 
   BASE_URL = "https://api.spotify.com/v1/me"
 
-  def initialize
-    @user_token_data = SpotifyUserToken.find_or_create_by!(id: DEFAULT_USER_ID)
+  def initialize(user_id: DEFAULT_USER_ID)
+    @user_token_data = SpotifyUserToken.find_or_create_by!(user_id: user_id)
     @http = HTTP.use(logging: {logger: Rails.logger})
 
     if @user_token_data.access_token.nil?
@@ -68,6 +70,61 @@ class SpotifyClient
 
   def get_currently_playing
     response = self.get(BASE_URL + "/player/currently-playing")
+    return response
+  end
+
+  def get_playlists(limit: 50, offset: 0)
+    # TODO: need to consider pagination
+
+    params = {
+      limit: limit,
+      offset: offset
+    }
+
+    response = self.get(BASE_URL + "/playlists", params: params)
+    return response
+  end
+
+  def get_playlist_tracks(playlist_id, limit: 100, offset: 0)
+    # TODO: need to consider pagination
+
+    params = {
+      limit: limit,
+      offset: offset
+    }
+
+    response = self.get("https://api.spotify.com/v1/playlists/#{playlist_id}/tracks", params: params)
+    return response
+  end
+
+  def get_recommended_tracks(seed_track_ids:)
+    url = "https://api.spotify.com/v1/recommendations"
+    params = {
+      limit: 100,
+      seed_tracks: seed_track_ids.join(',')
+    }
+    response = self.get(url, params: params)
+    return response
+  end
+
+  def add_tracks_to_playlist(playlist_id:, track_uris:)
+    url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
+
+    params = {
+      uris: track_uris.join(",")
+    }
+
+    response = request.post(url, params: params)
+    return response
+  end
+
+  def remove_tracks_from_playlist(playlist_id:, track_uris:)
+    url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
+    payload = {
+      tracks: track_uris.map {|track_uri| {uri: track_uri}}
+    }
+
+    response = request.delete(url, json: payload)
     return response
   end
 
