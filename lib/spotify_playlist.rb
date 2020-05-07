@@ -66,7 +66,7 @@ class SpotifyPlaylist
 
   def num_tracks_to_add
     current_count = @playlist.active_tracks.size
-    num_played_tracks = @playlist.active_tracks.count {|track| track.plays.any?}
+    num_played_tracks = @playlist.active_tracks.includes(:plays).count {|track| track.plays.any?}
     new_count = [(num_played_tracks / TARGET_PCT_TRACKS_PLAYED).to_i, current_count].max
     return [new_count.clamp(MIN_PLAYLIST_SIZE, MAX_PLAYLIST_SIZE) - current_count, 0].max
   end
