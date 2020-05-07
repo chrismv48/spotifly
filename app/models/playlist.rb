@@ -29,7 +29,7 @@ class Playlist < ApplicationRecord
   end
 
   def add_track_items(track_items)
-    tracks = track_items.map { |track_item| Track.create_from_item(track_item) }
+    tracks = track_items.map { |track_item| Track.find_or_create_from_item(track_item) }
     self.tracks << tracks
     return tracks
   end
@@ -50,7 +50,7 @@ class Playlist < ApplicationRecord
         )
 
         current_playlist_tracks = playlist.active_tracks
-        tracks = track_items.map { |track_item| Track.create_from_item(track_item) }
+        tracks = track_items.map { |track_item| Track.find_or_create_from_item(track_item) }
 
         tracks_to_remove = current_playlist_tracks - tracks
         PlaylistTrack.active.where(playlist_id: playlist.id, track_id: tracks_to_remove.pluck(:id)).update_all(deleted_at: Time.now)

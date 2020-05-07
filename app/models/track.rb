@@ -30,7 +30,7 @@ class Track < ApplicationRecord
   end
 
   class << self
-    def create_from_item(track_item)
+    def find_or_create_from_item(track_item)
       ActiveRecord::Base.transaction do
         track_item.deep_symbolize_keys!
         track = find_or_create_by(track_item.slice(:id)) do |track|

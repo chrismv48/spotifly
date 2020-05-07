@@ -52,15 +52,8 @@ class SpotifyPoller
   def persist_currently_playing!(currently_playing)
     ActiveRecord::Base.transaction do
       track = currently_playing[:track]
-      track_record = Track.find_or_create_by!(track)
+      Track.find_or_create_from_item(track)
       Play.create!(currently_playing[:play])
-
-      artists = currently_playing[:artists]
-      artists_records = artists.map {|artist| Artist.find_or_create_by!(artist)}
-
-      if track_record.id_previously_changed? # new record, we need to link it to the artists
-        track_record.artists = artists_records
-      end
     end
   end
 
