@@ -27,7 +27,7 @@ class SpotifyPoller
 
         currently_playing = build_currently_playing(parsed_resp)
 
-        Rails.logger.info("Playing track: #{currently_playing[:track][:name]} by #{currently_playing[:artists].pluck(:name).to_sentence}")
+        Rails.logger.info("Playing track: #{currently_playing[:track][:name]} by #{currently_playing[:track][:artists].pluck(:name).to_sentence}")
 
         if previously_playing && previously_playing[:play][:track_id] != currently_playing[:play][:track_id]
           Rails.logger.info("Creating new Play for #{previously_playing.inspect}")
@@ -70,9 +70,9 @@ class SpotifyPoller
         id: item["id"],
         name: item["name"],
         duration_ms: item["duration_ms"],
-        popularity: item["popularity"]
-      },
-      artists: item["artists"].map {|artist| artist.slice("id", "name").symbolize_keys}
+        popularity: item["popularity"],
+        artists: item["artists"].map {|artist| artist.slice("id", "name").symbolize_keys}
+      }
     }
   end
 end
