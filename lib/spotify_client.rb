@@ -38,7 +38,7 @@ class SpotifyClient
   def initialize(user_id: DEFAULT_USER_ID)
     @user_token_data = SpotifyUserToken.find_or_create_by!(user_id: user_id)
     @http = HTTP.use(logging: {logger: Rails.logger})
-
+    @consecutive_failed_requests = 0
     if @user_token_data.access_token.nil?
       if @user_token_data.oauth_code
         get_access_token!
@@ -63,9 +63,24 @@ class SpotifyClient
     if token_needs_to_be_refreshed?(response)
       refresh_access_token!
       response = request.get(*args)
+    elsif response_is_server_error?(response)
+      if @consecutive_failed_requests <= 3
+        Rails.logger.info("Retrying failed request after sleeping")
+        @consecutive_failed_requests += 1
+        sleep(@consecutive_failed_requests * 2)
+        get(*args)
+      else
+        # raise error?
+      end
+    else
+      @consecutive_failed_requests = 0
     end
 
     return response
+  end
+
+  def response_is_server_error?(response)
+    response.code.to_s.starts_with?('5')
   end
 
   def get_currently_playing
