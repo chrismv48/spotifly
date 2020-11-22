@@ -68,7 +68,7 @@ ActiveRecord::Schema.define(version: 2020_04_26_215110) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "tracks", id: :string, force: :cascade do |t|
+  create_table "track_items", id: :string, force: :cascade do |t|
     t.string "name"
     t.integer "duration_ms"
     t.float "popularity"
