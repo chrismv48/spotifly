@@ -1,3 +1,4 @@
+# typed: true
 require "spotify_client"
 
 class SpotifyAuthController < ApplicationController

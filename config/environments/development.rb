@@ -1,3 +1,4 @@
+# typed: false
 Rails.application.configure do
 
   host = "localhost:3000"

@@ -1,10 +1,11 @@
+# typed: true
 require 'http'
 require 'url_generator'
 
 # For auth flow, see https://developer.spotify.com/documentation/general/guides/authorization-guide/
 
 class SpotifyClient
-
+  extend T::Sig
   attr_reader :user_token_data
 
   CLIENT_ID = Rails.application.credentials.spotify[:client_id]
@@ -40,6 +41,7 @@ class SpotifyClient
 
   BASE_URL = "https://api.spotify.com/v1/me"
 
+  sig { params(user_id: Integer).void }
   def initialize(user_id: DEFAULT_USER_ID)
     @user_token_data = SpotifyUserToken.find_or_create_by!(user_id: user_id)
     @http = HTTP.use(logging: {logger: Rails.logger})
@@ -53,6 +55,7 @@ class SpotifyClient
     end
   end
 
+  sig { returns(HTTP::Client) }
   def request
     @http
         .auth("Bearer #{@user_token_data.access_token}")
@@ -62,7 +65,8 @@ class SpotifyClient
         )
   end
 
-  def get(*args)
+  sig { params(args: T.untyped).returns(HTTP::Response) }
+  def api_get(*args)
     response = request.get(*args)
 
     if token_needs_to_be_refreshed?(response)
@@ -73,7 +77,7 @@ class SpotifyClient
         Rails.logger.info("Retrying failed request after sleeping")
         @consecutive_failed_requests += 1
         sleep(@consecutive_failed_requests * 2)
-        get(*args)
+        api_get(*args)
       else
         # raise error?
       end
@@ -84,15 +88,18 @@ class SpotifyClient
     return response
   end
 
+  sig { params(response: HTTP::Response).returns(T::Boolean) }
   def response_is_server_error?(response)
     response.code.to_s.starts_with?('5')
   end
 
+  sig { returns(HTTP::Response) }
   def get_currently_playing
-    response = self.get(BASE_URL + "/player/currently-playing")
+    response = self.api_get(BASE_URL + "/player/currently-playing")
     return response
   end
 
+  sig { params(limit: Integer, offset: Integer).returns(HTTP::Response) }
   def get_playlists(limit: 50, offset: 0)
     # TODO: need to consider pagination
 
@@ -101,10 +108,11 @@ class SpotifyClient
         offset: offset
     }
 
-    response = self.get(BASE_URL + "/playlists", params: params)
+    response = self.api_get(BASE_URL + "/playlists", params: params)
     return response
   end
 
+  sig { params(playlist_id: Integer, limit: Integer, offset: Integer).returns(HTTP::Response) }
   def get_playlist_tracks(playlist_id, limit: 100, offset: 0)
     # TODO: need to consider pagination
 
@@ -113,20 +121,22 @@ class SpotifyClient
         offset: offset
     }
 
-    response = self.get("https://api.spotify.com/v1/playlists/#{playlist_id}/tracks", params: params)
+    response = self.api_get("https://api.spotify.com/v1/playlists/#{playlist_id}/tracks", params: params)
     return response
   end
 
+  sig { params(seed_track_ids: T::Array[Integer]).returns(HTTP::Response) }
   def get_recommended_tracks(seed_track_ids:)
     url = "https://api.spotify.com/v1/recommendations"
     params = {
         limit: 100,
         seed_tracks: seed_track_ids.join(',')
     }
-    response = self.get(url, params: params)
+    response = self.api_get(url, params: params)
     return response
   end
 
+  sig { params(playlist_id: Integer, track_uris: T::Array[String]).returns(HTTP::Response) }
   def add_tracks_to_playlist!(playlist_id:, track_uris:)
     url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
 
@@ -138,6 +148,7 @@ class SpotifyClient
     return response
   end
 
+  sig { params(playlist_id: Integer, track_uris: T::Array[String]).returns(HTTP::Response) }
   def remove_tracks_from_playlist!(playlist_id:, track_uris:)
     url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
     payload = {
@@ -148,6 +159,7 @@ class SpotifyClient
     return response
   end
 
+  sig { returns(String) }
   def get_user_authorization_url
     auth_url = "https://accounts.spotify.com/authorize"
     params = {
@@ -161,6 +173,7 @@ class SpotifyClient
     return resp["Location"]
   end
 
+  sig { void }
   def refresh_access_token!
     refresh_token_url = "https://accounts.spotify.com/api/token"
 
@@ -181,7 +194,7 @@ class SpotifyClient
     resp = request.post(refresh_token_url, form: params)
 
     if resp.code != 200
-      raise RuntimeError("Something went wrong with the response: #{resp}")
+      raise RuntimeError.new("Something went wrong with the response: #{resp}")
     end
 
     parsed_response = resp.parse
@@ -194,6 +207,7 @@ class SpotifyClient
     @user_token_data.save!
   end
 
+  sig { params(response: HTTP::Response).returns(T::Boolean) }
   def token_needs_to_be_refreshed?(response)
     if response.code == 401
       return response.parse["error"]["message"] == "The access token expired"
@@ -202,6 +216,7 @@ class SpotifyClient
     return false
   end
 
+  sig { void }
   def get_access_token!
     access_token_url = "https://accounts.spotify.com/api/token"
 
@@ -222,7 +237,7 @@ class SpotifyClient
     resp = request.post(access_token_url, form: params)
 
     if resp.code != 200
-      raise RuntimeError("Something went wrong with the response: #{resp}")
+      raise RuntimeError.new("Something went wrong with the response: #{resp}")
     end
 
     parsed_response = resp.parse

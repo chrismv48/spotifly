@@ -1,13 +1,16 @@
+# typed: false
 require './config/environment.rb'
 require "spotify_client"
 
 class SpotifyPoller
+  extend T::Sig
 
   MAX_SLEEP_DURATION = 3
   MIN_SLEEP_DURATION = 0.5
 
   DEFAULT_RUN_UNTIL_HOUR = 23 # 11pm
 
+  sig {void}
   def run!
     sc = SpotifyClient.new
 
@@ -56,6 +59,7 @@ class SpotifyPoller
       Play.create!(currently_playing[:play])
     end
   end
+
 
   def build_currently_playing(parsed_response)
     item, context = parsed_response["item"], parsed_response["context"]

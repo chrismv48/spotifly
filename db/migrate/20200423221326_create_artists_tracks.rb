@@ -1,3 +1,4 @@
+# typed: true
 class CreateArtistsTracks < ActiveRecord::Migration[6.0]
   def change
     create_table :artists_tracks do |t|

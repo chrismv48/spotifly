@@ -1,3 +1,4 @@
+# typed: true
 class CreateTracks < ActiveRecord::Migration[6.0]
   def change
     create_table :track_items, id: false do |t|

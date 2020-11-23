@@ -1,3 +1,4 @@
+# typed: true
 class CreatePlaylists < ActiveRecord::Migration[6.0]
   def change
     create_table :playlists, id: false do |t|

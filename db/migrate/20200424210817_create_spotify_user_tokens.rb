@@ -1,3 +1,4 @@
+# typed: true
 class CreateSpotifyUserTokens < ActiveRecord::Migration[6.0]
   def change
     create_table :spotify_user_tokens do |t|
