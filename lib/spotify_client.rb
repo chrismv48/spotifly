@@ -191,7 +191,7 @@ class SpotifyClient
 
     if resp.code != 200
       # if something went wrong with fetching the access token, it's best to clear the oauth token in case it was wrong
-      @user_token_data.oauth_token = nil
+      @user_token_data.oauth_code = nil
       @user_token_data.save!
       raise RuntimeError.new("Something went wrong with the response: #{resp}")
     end
