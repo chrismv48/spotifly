@@ -1,10 +1,7 @@
-# typed: true
-require 'sorbet-runtime'
 require './config/environment.rb'
 require "spotify_client"
 
 class SpotifyPlaylist
-  extend T::Sig
   attr_reader :playlist
 
   DESCRIPTION_KEYWORD = "!dynamic" # let's us know this playlist should be considered
@@ -13,20 +10,17 @@ class SpotifyPlaylist
   TARGET_PCT_TRACKS_PLAYED = 0.65
   CONSECUTIVE_SKIP_LIMIT_TO_REMOVE = 2
 
-  sig {params(playlist: Playlist).void}
   def initialize(playlist)
     @playlist = playlist
     @spotify_client = SpotifyClient.new
   end
 
-  sig {void}
   def augment!
     self.cull!
     self.populate!
   end
 
   # Remove poor performing tracks
-  sig {void}
   def cull!
     tracks_to_cull = @playlist.active_tracks.includes(:plays).select do |track|
       consecutive_skips = 0
@@ -59,7 +53,6 @@ class SpotifyPlaylist
   end
 
   # Finds new music similar to the top tracks on the playlist.
-  sig {void}
   def populate!
     seed_tracks = @playlist.top_tracks.first(3)
     return if seed_tracks.empty?
@@ -81,14 +74,12 @@ class SpotifyPlaylist
     Rails.logger.info("Added #{added_tracks.size} tracks: #{added_tracks.pluck(:name).to_sentence}")
   end
 
-  sig {returns(Float)}
   def pct_tracks_played
     current_count = @playlist.active_tracks.size
     num_played_tracks = @playlist.active_tracks.count { |track| track.plays.any? }
     return num_played_tracks / current_count.to_f
   end
 
-  sig {returns(Integer)}
   def num_tracks_to_add
     current_count = @playlist.active_tracks.size
     num_played_tracks = @playlist.active_tracks.includes(:plays).count { |track| track.plays.any? }
@@ -97,9 +88,7 @@ class SpotifyPlaylist
   end
 
   class << self
-    extend T::Sig
 
-    sig {returns(T::Array[SpotifyPlaylist])}
     def build_many_from_query
       client = SpotifyClient.new
       response = client.get_playlists
@@ -119,7 +108,6 @@ class SpotifyPlaylist
       return spotify_playlists
     end
 
-    sig {params(description: String).returns(T::Boolean)}
     def dynamic?(description:)
       description.include? DESCRIPTION_KEYWORD
     end
