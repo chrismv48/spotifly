@@ -72,7 +72,7 @@ class SpotifyPoller
         play: {
             track_id: item["id"],
             progress_ms: parsed_response["progress_ms"],
-            playlist_id: context["uri"][/spotify:playlist:(.*)/, 1]
+            playlist_id: context["uri"][/.*playlist:(.*)/, 1]
         },
         track: {
             id: item["id"],

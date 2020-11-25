@@ -1,5 +1,6 @@
 require 'http'
 require 'url_generator'
+require "timeout"
 
 # For auth flow, see https://developer.spotify.com/documentation/general/guides/authorization-guide/
 
@@ -47,7 +48,16 @@ class SpotifyClient
       if @user_token_data.oauth_code
         get_access_token!
       else
-        raise "No access token/oauth code found, go get it and insert it into the DB: #{get_user_authorization_url}"
+        puts "No access token/oauth code found, go get it from\n\n#{get_user_authorization_url}\n\n and paste it here:"
+        begin
+          Timeout::timeout 30 do
+            @user_token_data.oauth_code = STDIN.gets.chomp
+            @user_token_data.save!
+            get_access_token!
+          end
+        rescue Timeout::Error
+          raise "No access token/oauth code found, go get it and insert it into the DB: #{get_user_authorization_url}"
+        end
       end
     end
   end
