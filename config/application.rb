@@ -18,5 +18,8 @@ module Spotifly
     # the framework and any gems in your application.
 
     config.time_zone = 'Eastern Time (US & Canada)'
+
+    config.eager_load_paths << Rails.root.join('lib')
+    config.eager_load_paths << Rails.root.join('lib/types')
   end
 end

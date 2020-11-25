@@ -11,6 +11,7 @@ class SpotifyPlaylist
   MAX_PLAYLIST_SIZE = 100
   MIN_PLAYLIST_SIZE = 20
   TARGET_PCT_TRACKS_PLAYED = 0.65
+  CONSECUTIVE_SKIP_LIMIT_TO_REMOVE = 2
 
   sig {params(playlist: Playlist).void}
   def initialize(playlist)
@@ -27,9 +28,19 @@ class SpotifyPlaylist
   # Remove poor performing tracks
   sig {void}
   def cull!
-    # TODO: This is probably too strict. Maybe it needs to be 2 consecutive skips?vrichrbbergvtktuulcekhrrerhdidjt
     tracks_to_cull = @playlist.active_tracks.includes(:plays).select do |track|
-      track.plays.count { |play| play.skipped? } >= 2
+      consecutive_skips = 0
+      track.plays.each do |play|
+        if play.skipped?
+          consecutive_skips += 1
+        else
+          consecutive_skips = 0
+        end
+
+        return true if consecutive_skips >= CONSECUTIVE_SKIP_LIMIT_TO_REMOVE
+      end
+
+      return false
     end
 
     return unless tracks_to_cull.any?

@@ -10,11 +10,11 @@
 #
 class Artist < ApplicationRecord
   has_many :artists_tracks, inverse_of: :artist
-  has_many :track_items, through: :artists_tracks
+  has_many :tracks, through: :artists_tracks
 
   validates_uniqueness_of :id
 
-  accepts_nested_attributes_for :track_items
+  accepts_nested_attributes_for :tracks
 
   class << self
     def build_from_item(artist_item)

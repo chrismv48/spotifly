@@ -21,6 +21,4 @@ class PlaylistTrack < ApplicationRecord
   belongs_to :track
 
   scope :active, -> { where(deleted_at: nil) }
-
-
 end

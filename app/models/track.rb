@@ -23,7 +23,7 @@ class Track < ApplicationRecord
   has_many :artists_tracks
   has_many :artists, through: :artists_tracks
   has_many :playlist_tracks
-  has_many :playlists, through: :playlists
+  has_many :playlists, through: :playlist_tracks
   has_many :plays
 
   def spotify_uri

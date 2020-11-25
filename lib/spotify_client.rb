@@ -112,7 +112,7 @@ class SpotifyClient
     return response
   end
 
-  sig { params(playlist_id: Integer, limit: Integer, offset: Integer).returns(HTTP::Response) }
+  sig { params(playlist_id: String, limit: Integer, offset: Integer).returns(HTTP::Response) }
   def get_playlist_tracks(playlist_id, limit: 100, offset: 0)
     # TODO: need to consider pagination
 
@@ -136,7 +136,7 @@ class SpotifyClient
     return response
   end
 
-  sig { params(playlist_id: Integer, track_uris: T::Array[String]).returns(HTTP::Response) }
+  sig { params(playlist_id: String, track_uris: T::Array[String]).returns(HTTP::Response) }
   def add_tracks_to_playlist!(playlist_id:, track_uris:)
     url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
 
@@ -148,7 +148,7 @@ class SpotifyClient
     return response
   end
 
-  sig { params(playlist_id: Integer, track_uris: T::Array[String]).returns(HTTP::Response) }
+  sig { params(playlist_id: String, track_uris: T::Array[String]).returns(HTTP::Response) }
   def remove_tracks_from_playlist!(playlist_id:, track_uris:)
     url = "https://api.spotify.com/v1/playlists/#{playlist_id}/tracks"
     payload = {
