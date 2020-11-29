@@ -2,7 +2,7 @@
 Rails.application.configure do
 
   host = "localhost:3000"
-  config.action_mailer.default_url_options = { host: host }
+  config.action_mailer.default_url_options = {host: host}
 
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -25,7 +25,7 @@ Rails.application.configure do
 
     config.cache_store = :file_store, "#{root}/tmp/cache/"
     config.public_file_server.headers = {
-      'Cache-Control' => "public, max-age=#{2.days.to_i}"
+        'Cache-Control' => "public, max-age=#{2.days.to_i}"
     }
   else
     config.action_controller.perform_caching = false
@@ -47,8 +47,11 @@ Rails.application.configure do
   config.logger = Logger.new(STDOUT)
 
   # Print Rails log to log/development.log
-  file_logger = Logger.new(Rails.root.join("log/development.log"))
+  file_logger = Logger.new(Rails.root.join("log/development.log"), 1, 50 * 1024 * 1024)
   config.logger.extend(ActiveSupport::Logger.broadcast(file_logger))
+
+  # Limit log size to 50MB
+  # config.logger.extend(ActiveSupport::Logger.new(config.paths['log'].first, 1, 50 * 1024 * 1024))
 
   # Append LOG_LEVEL to adjust the logging level.
   # e.g. bundle exec rails server LOG_LEVEL=error
