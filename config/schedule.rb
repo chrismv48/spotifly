@@ -27,6 +27,6 @@ every 1.day, at: '6:15 am' do
   rake "poll_spotify"
 end
 
-every 1.day, at: ['6:00 am', '10:00 am', '2:00 pm', '5:00 pm', '7:30 pm'] do
+every 1.day, at: ['6:00 am', '10:00 am', '2:00 pm', '5:00 pm', '7:30 pm'], mailto: 'chris.r.armstrong@gmail.com' do
   rake "augment_playlists"
 end

@@ -42,7 +42,10 @@ class SpotifyClient
 
   def initialize(user_id: DEFAULT_USER_ID)
     @user_token_data = SpotifyUserToken.find_or_create_by!(user_id: user_id)
-    @http = HTTP.use(logging: {logger: Rails.logger})
+    # TODO: see if there's a way to make this less noisy, or maybe to set it to debug level
+    http_logger = Logger.new(STDOUT)
+    http_logger.level = :info
+    @http = HTTP.use(logging: {logger: http_logger})
     @consecutive_failed_requests = 0
     if @user_token_data.access_token.nil?
       if @user_token_data.oauth_code

@@ -13,6 +13,11 @@ class SpotifyPlaylist
   def initialize(playlist)
     @playlist = playlist
     @spotify_client = SpotifyClient.new
+    @logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
+  end
+
+  def log(msg)
+    @logger.tagged(self.playlist.name) { @logger.info msg }
   end
 
   def augment!
@@ -37,9 +42,9 @@ class SpotifyPlaylist
       return false
     end
 
-    return unless tracks_to_cull.any?
+    log("Found #{tracks_to_cull.size} to cull: #{tracks_to_cull.pluck(:name).to_sentence}")
 
-    Rails.logger.info("Found #{tracks_to_cull.size} to cull: #{tracks_to_cull.pluck(:name).to_sentence}")
+    return if tracks_to_cull.empty?
 
     @playlist
         .playlist_tracks
@@ -57,7 +62,7 @@ class SpotifyPlaylist
     seed_tracks = @playlist.top_tracks.first(3)
     return if seed_tracks.empty?
 
-    Rails.logger.info("Using #{seed_tracks.size} to seed: #{seed_tracks.pluck(:name).to_sentence}")
+    log("Using #{seed_tracks.size} to seed: #{seed_tracks.pluck(:name).to_sentence}")
 
     response = @spotify_client.get_recommended_tracks(seed_track_ids: seed_tracks.pluck(:id))
 
@@ -71,7 +76,7 @@ class SpotifyPlaylist
 
     added_tracks = @playlist.add_track_items(track_items_to_add)
     @spotify_client.add_tracks_to_playlist!(playlist_id: @playlist.id, track_uris: added_tracks.map(&:spotify_uri))
-    Rails.logger.info("Added #{added_tracks.size} tracks: #{added_tracks.pluck(:name).to_sentence}")
+    log("Added #{added_tracks.size} tracks: #{added_tracks.pluck(:name).to_sentence}")
   end
 
   def pct_tracks_played
