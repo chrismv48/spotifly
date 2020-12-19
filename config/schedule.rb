@@ -24,9 +24,9 @@
 set :environment, 'development'
 
 every 1.day, at: '6:15 am' do
-  rake "poll_spotify"
+  rake "poll_spotify LOG_LEVEL=info"
 end
 
 every 1.day, at: ['6:00 am', '10:00 am', '2:00 pm', '5:00 pm', '7:30 pm'], mailto: 'chris.r.armstrong@gmail.com' do
-  rake "augment_playlists"
+  rake "augment_playlists LOG_LEVEL=info"
 end
