@@ -50,7 +50,7 @@ class SpotifyPoller
         previously_playing = currently_playing
       else
         # TODO: Should probably make this more robust, ie retries
-        Rails.logger.warn "Encountered response error, stopping."
+        Rails.logger.warn "Encountered response error, stopping!"
         break
       end
 
