@@ -85,9 +85,9 @@ class SpotifyClient
         Rails.logger.info("Retrying failed request after sleeping")
         @consecutive_failed_requests += 1
         sleep(@consecutive_failed_requests * 2)
-        api_get(*args)
+        return api_get(*args)
       else
-        # raise error?
+        raise "Response error after retrying: #{response.code}"
       end
     else
       @consecutive_failed_requests = 0

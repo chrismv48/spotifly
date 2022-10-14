@@ -9,6 +9,8 @@ class SpotifyPlaylist
   MIN_PLAYLIST_SIZE = 20
   TARGET_PCT_TRACKS_PLAYED = 0.65
   CONSECUTIVE_SKIP_LIMIT_TO_REMOVE = 2
+  TARGET_PROGRESS_PCT = 0.8
+  MIN_PLAYS = 2
 
   def initialize(playlist)
     @playlist = playlist
@@ -25,21 +27,17 @@ class SpotifyPlaylist
     self.populate!
   end
 
+  def tracks_to_delete
+    return @playlist.active_tracks.includes(:plays).select do |track|
+      return track.avg_progress_pct < TARGET_PROGRESS_PCT && track.plays.count >= MIN_PLAYS
+    end
+  end
+
   # Remove poor performing tracks
   def cull!
     tracks_to_cull = @playlist.active_tracks.includes(:plays).select do |track|
-      consecutive_skips = 0
-      track.plays.each do |play|
-        if play.skipped?
-          consecutive_skips += 1
-        else
-          consecutive_skips = 0
-        end
-
-        return true if consecutive_skips >= CONSECUTIVE_SKIP_LIMIT_TO_REMOVE
-      end
-
-      return false
+      consecutive_skips = track.plays.count {|play| play.skipped?}
+      consecutive_skips >= CONSECUTIVE_SKIP_LIMIT_TO_REMOVE
     end
 
     log("Found #{tracks_to_cull.size} to cull: #{tracks_to_cull.pluck(:name).to_sentence}")
@@ -47,18 +45,23 @@ class SpotifyPlaylist
     return if tracks_to_cull.empty?
 
     @playlist
-        .playlist_tracks
-        .where(track_id: tracks_to_cull.pluck(:id))
-        .update_all(deleted_at: Time.now)
+      .playlist_tracks
+      .where(track_id: tracks_to_cull.pluck(:id))
+      .update_all(deleted_at: Time.now)
 
     @spotify_client.remove_tracks_from_playlist!(
-        playlist_id: @playlist.id,
-        track_uris: tracks_to_cull.map(&:spotify_uri)
+      playlist_id: @playlist.id,
+      track_uris: tracks_to_cull.map(&:spotify_uri)
     )
   end
 
   # Finds new music similar to the top tracks on the playlist.
   def populate!
+    if num_tracks_to_add.zero?
+      log("Playlist does not have enough playtime, skipping populate step.")
+      return
+    end
+
     seed_tracks = @playlist.top_tracks.first(3)
     return if seed_tracks.empty?
 

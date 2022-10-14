@@ -30,6 +30,11 @@ class Track < ApplicationRecord
     "spotify:track:#{id}"
   end
 
+  def avg_progress_pct
+    avg_progress_time = self.plays.average(&:progress_ms)
+    return avg_progress_time / self.duration_ms.to_f
+  end
+
   class << self
     def find_or_create_from_item(track_item)
       ActiveRecord::Base.transaction do
@@ -38,11 +43,11 @@ class Track < ApplicationRecord
           track.assign_attributes(track_item.slice(*Track.attributes))
         end
 
-        unless track.id_previously_changed?   # was it newly created?
+        unless track.id_previously_changed? # was it newly created?
           return track
         end
 
-        artists = track_item[:artists].map {|artist| Artist.find_or_create_by(artist.slice(*Artist.attributes))}
+        artists = track_item[:artists].map { |artist| Artist.find_or_create_by(artist.slice(*Artist.attributes)) }
         track.artists = artists
         return track
       end
