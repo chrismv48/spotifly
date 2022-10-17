@@ -8,9 +8,8 @@ class SpotifyPlaylist
   MAX_PLAYLIST_SIZE = 100
   MIN_PLAYLIST_SIZE = 20
   TARGET_PCT_TRACKS_PLAYED = 0.65
-  CONSECUTIVE_SKIP_LIMIT_TO_REMOVE = 2
-  TARGET_PROGRESS_PCT = 0.8
-  MIN_PLAYS = 2
+  SKIP_RATE_THRESHOLD = 0.5
+  LAST_N_PLAYS_TO_CONSIDER = 5
 
   def initialize(playlist)
     @playlist = playlist
@@ -25,20 +24,12 @@ class SpotifyPlaylist
   def augment!
     self.cull!
     self.populate!
-  end
-
-  def tracks_to_delete
-    return @playlist.active_tracks.includes(:plays).select do |track|
-      return track.avg_progress_pct < TARGET_PROGRESS_PCT && track.plays.count >= MIN_PLAYS
-    end
+    self.reorder_by_last_played!
   end
 
   # Remove poor performing tracks
   def cull!
-    tracks_to_cull = @playlist.active_tracks.includes(:plays).select do |track|
-      consecutive_skips = track.plays.count {|play| play.skipped?}
-      consecutive_skips >= CONSECUTIVE_SKIP_LIMIT_TO_REMOVE
-    end
+    tracks_to_cull = @playlist.active_tracks.includes(:plays).select(&:should_remove?)
 
     log("Found #{tracks_to_cull.size} to cull: #{tracks_to_cull.pluck(:name).to_sentence}")
 
@@ -80,6 +71,16 @@ class SpotifyPlaylist
     added_tracks = @playlist.add_track_items(track_items_to_add)
     @spotify_client.add_tracks_to_playlist!(playlist_id: @playlist.id, track_uris: added_tracks.map(&:spotify_uri))
     log("Added #{added_tracks.size} tracks: #{added_tracks.pluck(:name).to_sentence}")
+  end
+
+  def reorder_by_last_played!
+    ordered_tracks = @playlist.active_tracks.includes(:plays).sort_by do |track|
+      last_play = track.plays.last
+      last_play.nil? ? 0 : last_play.created_at.to_i
+    end
+
+    @spotify_client.set_playlist_tracks!(playlist_id: @playlist.id, track_uris: ordered_tracks.map(&:spotify_uri))
+    log("Reordered tracks by least recently played")
   end
 
   def pct_tracks_played

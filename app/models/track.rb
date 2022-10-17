@@ -35,6 +35,12 @@ class Track < ApplicationRecord
     return avg_progress_time / self.duration_ms.to_f
   end
 
+  def should_remove?
+    last_n_plays = self.plays.last(SpotifyPlaylist::LAST_N_PLAYS_TO_CONSIDER)
+    skip_rate = last_n_plays.count {|play| play.skipped?} / last_n_plays.size.to_f
+    skip_rate >= SpotifyPlaylist::SKIP_RATE_THRESHOLD
+  end
+
   class << self
     def find_or_create_from_item(track_item)
       ActiveRecord::Base.transaction do
