@@ -26,10 +26,10 @@ class SpotifyPoller
     while Time.now < run_until
       resp = sc.get_currently_playing
       if resp.code == 204
-        Rails.logger.info("Nothing playing...")
+        Rails.logger.debug("Nothing playing...")
         sleep_duration = 15
       elsif resp.code == 200 && !resp.parse["is_playing"]
-        Rails.logger.info("Track is paused")
+        Rails.logger.debug("Track is paused")
         sleep_duration = 15
       elsif resp.code == 200
         parsed_resp = resp.parse
@@ -44,7 +44,7 @@ class SpotifyPoller
         end
 
         progress_pct = currently_playing[:play][:progress_ms] / currently_playing[:track][:duration_ms].to_f
-        Rails.logger.info "Progress: #{(progress_pct * 100).round}%"
+        Rails.logger.debug "Progress: #{(progress_pct * 100).round}%"
         sleep_duration = [MAX_SLEEP_DURATION * progress_pct, MIN_SLEEP_DURATION].max.round(2)
 
         previously_playing = currently_playing
@@ -54,8 +54,7 @@ class SpotifyPoller
         break
       end
 
-      Rails.logger.info("Sleeping #{sleep_duration}s")
-      Rails.logger.info `ps -o rss= -p #{$$}`.to_i
+      Rails.logger.debug("Sleeping #{sleep_duration}s")
       sleep(sleep_duration)
     end
   end
