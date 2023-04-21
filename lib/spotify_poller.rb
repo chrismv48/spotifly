@@ -1,5 +1,5 @@
-require './config/environment.rb'
-require "spotify_client"
+require './config/environment'
+require 'spotify_client'
 
 # This class is responsible for polling the Spotify API to check if anything is being played. If it is, we create a play record.
 # When a track is skipped, we detect this via polling and update the play record with the track progress. This ultimately
@@ -16,7 +16,7 @@ class SpotifyPoller
   def run!
     sc = SpotifyClient.new
 
-    run_until = Time.now.change({hour: DEFAULT_RUN_UNTIL_HOUR, min: 0, sec: 0})
+    run_until = Time.now.change({ hour: DEFAULT_RUN_UNTIL_HOUR, min: 0, sec: 0 })
     previously_playing = nil
 
     # TODO: Currently this process will only generate tracks and plays. It will not try to create playlists or playlist_tracks.
@@ -26,10 +26,10 @@ class SpotifyPoller
     while Time.now < run_until
       resp = sc.get_currently_playing
       if resp.code == 204
-        Rails.logger.debug("Nothing playing...")
+        Rails.logger.debug('Nothing playing...')
         sleep_duration = 15
-      elsif resp.code == 200 && !resp.parse["is_playing"]
-        Rails.logger.debug("Track is paused")
+      elsif resp.code == 200 && !resp.parse['is_playing']
+        Rails.logger.debug('Track is paused')
         sleep_duration = 15
       elsif resp.code == 200
         parsed_resp = resp.parse
@@ -50,7 +50,7 @@ class SpotifyPoller
         previously_playing = currently_playing
       else
         # TODO: Should probably make this more robust, ie retries
-        Rails.logger.warn "Encountered response error, stopping!"
+        Rails.logger.warn 'Encountered response error, stopping!'
         break
       end
 
@@ -68,20 +68,20 @@ class SpotifyPoller
   end
 
   def build_currently_playing(parsed_response)
-    item, context = parsed_response["item"], parsed_response["context"]
+    item, context = parsed_response['item'], parsed_response['context']
     return {
-        play: {
-            track_id: item["id"],
-            progress_ms: parsed_response["progress_ms"],
-            playlist_id: context["uri"][/.*playlist:(.*)/, 1]
-        },
-        track: {
-            id: item["id"],
-            name: item["name"],
-            duration_ms: item["duration_ms"],
-            popularity: item["popularity"],
-            artists: item["artists"].map { |artist| artist.slice("id", "name").symbolize_keys }
-        }
+      play: {
+        track_id: item['id'],
+        progress_ms: parsed_response['progress_ms'],
+        playlist_id: context['uri'][/.*playlist:(.*)/, 1]
+      },
+      track: {
+        id: item['id'],
+        name: item['name'],
+        duration_ms: item['duration_ms'],
+        popularity: item['popularity'],
+        artists: item['artists'].map { |artist| artist.slice('id', 'name').symbolize_keys }
+      }
     }
   end
 end

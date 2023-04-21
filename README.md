@@ -8,3 +8,4 @@ Dynamic playlists for Spotify
 - Poll Spotify - Rake task that calls the Spotify Poller
 - Augment Playlist - Rake task that uses playlist play history to augment the playlist (basically deleting tracks you don't like and adding new tracks for you to try.)
  
+## TODO

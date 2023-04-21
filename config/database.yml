@@ -80,6 +80,4 @@ test:
 #
 production:
   <<: *default
-  database: spotifly_production
-  username: spotifly
-  password: <%= ENV['SPOTIFLY_DATABASE_PASSWORD'] %>
+  url: <%= ENV['DATABASE_URL'] %>
