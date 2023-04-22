@@ -9,8 +9,7 @@ services:
     plan: free
     env: ruby
     buildCommand: "./bin/render-build.sh"
-#    startCommand: "bundle exec puma -C config/puma.rb"
-    startCommand: "bundle exec rake poll_spotify"
+    startCommand: "bundle exec puma -C config/puma.rb"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -18,3 +17,8 @@ services:
           property: connectionString
       - key: RAILS_MASTER_KEY
         sync: false
+  - type: background_worker
+    name: spotify_poller
+    env: ruby
+    buildCommand: bundle install
+    startCommand: bundle exec rake poll_spotify
