@@ -41,6 +41,7 @@ class SpotifyPoller
         if previously_playing && previously_playing[:play][:track_id] != currently_playing[:play][:track_id]
           Rails.logger.info("Creating new Play for #{previously_playing.inspect}")
           persist_currently_playing!(previously_playing)
+          # TODO: we are not updating the progress_ms field. Not sure if we're even using this though?
         end
 
         progress_pct = currently_playing[:play][:progress_ms] / currently_playing[:track][:duration_ms].to_f
