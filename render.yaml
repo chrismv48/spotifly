@@ -2,7 +2,6 @@ databases:
   - name: spotifly
     databaseName: spotifly
     user: spotifly
-    plan: free
 
 services:
   - type: web
