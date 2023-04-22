@@ -48,6 +48,7 @@ class SpotifyClient
     @http = HTTP.use(logging: { logger: http_logger })
     @consecutive_failed_requests = 0
     return unless @user_token_data.access_token.nil?
+
     if @user_token_data.oauth_code
       get_access_token!
     else
@@ -83,6 +84,7 @@ class SpotifyClient
       response = request.get(*args)
     elsif response_is_server_error?(response)
       raise "Response error after retrying: #{response.code}" unless @consecutive_failed_requests <= 3
+
       Rails.logger.info('Retrying failed request after sleeping')
       @consecutive_failed_requests += 1
       sleep(@consecutive_failed_requests * 2)

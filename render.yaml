@@ -2,10 +2,12 @@ databases:
   - name: spotifly
     databaseName: spotifly
     user: spotifly
+    plan: free
 
 services:
   - type: web
     name: spotifly
+    plan: free
     env: ruby
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
