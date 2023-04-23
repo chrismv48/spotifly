@@ -27,5 +27,4 @@ services:
         fromDatabase:
           name: spotifly
           property: connectionString
-      - key: RAILS_MASTER_KEY
         sync: false
