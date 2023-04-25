@@ -12,26 +12,22 @@ class SpotifyPoller
   MIN_SLEEP_DURATION = 0.5
 
   DEFAULT_RUN_UNTIL_HOUR = 23 # 11pm
+  DEFAULT_SLEEP_DURATION = 15
+
+  AUGMENT_EVERY_N_PLAYS = 10
 
   def run!
     sc = SpotifyClient.new
 
     run_until = Time.now.change({ hour: DEFAULT_RUN_UNTIL_HOUR, min: 0, sec: 0 })
     previously_playing = nil
+    plays_since_augment = 0
 
-    # TODO: Currently this process will only generate tracks and plays. It will not try to create playlists or playlist_tracks.
-    # That's handled by the Augment Playlist task. Really there is probably no need to treat the augmentation process as
-    # a separate process. We want to monitor the state of our playlists and make adjustments accordingly. This will
-    # result in a better user experience.
     while Time.now < run_until
       resp = sc.get_currently_playing
-      if resp.code == 204
-        Rails.logger.debug('Nothing playing...')
-        sleep_duration = 15
-      elsif resp.code == 200 && !resp.parse['is_playing']
-        Rails.logger.debug('Track is paused')
-        sleep_duration = 15
-      elsif resp.code == 200
+      sleep_duration = DEFAULT_SLEEP_DURATION
+
+      if resp.code == 200 && resp.parse['is_playing']
         parsed_resp = resp.parse
 
         currently_playing = build_currently_playing(parsed_resp)
@@ -41,7 +37,14 @@ class SpotifyPoller
         if previously_playing && previously_playing[:play][:track_id] != currently_playing[:play][:track_id]
           Rails.logger.info("Creating new Play for #{previously_playing.inspect}")
           persist_currently_playing!(previously_playing)
-          # TODO: we are not updating the progress_ms field. Not sure if we're even using this though?
+        end
+        plays_since_augment += 1
+
+        if plays_since_augment >= AUGMENT_EVERY_N_PLAYS
+          # This is not efficient because it is augmenting all playlists regardless of
+          # activity. Eventually should refactor to only augment relevant playlist(s)
+          PlaylistAugmenter.augment_all!
+          plays_since_augment = 0
         end
 
         progress_pct = currently_playing[:play][:progress_ms] / currently_playing[:track][:duration_ms].to_f
@@ -49,6 +52,10 @@ class SpotifyPoller
         sleep_duration = [MAX_SLEEP_DURATION * progress_pct, MIN_SLEEP_DURATION].max.round(2)
 
         previously_playing = currently_playing
+      elsif resp.code == 204
+        Rails.logger.debug('Nothing playing...')
+      elsif resp.code == 200 && !resp.parse['is_playing']
+        Rails.logger.debug('Track is paused')
       else
         # TODO: Should probably make this more robust, ie retries
         Rails.logger.warn 'Encountered response error, stopping!'

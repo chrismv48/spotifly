@@ -38,29 +38,25 @@ class Playlist < ApplicationRecord
   class << self
 
     def create_from_item(playlist_item, track_items: [])
-      ActiveRecord::Base.transaction do
-        playlist_item.deep_symbolize_keys!
+      playlist_item.deep_symbolize_keys!
 
-        playlist = Playlist.find_or_initialize_by(id: playlist_item[:id])
-
-        playlist.update_attributes!(
-          {
-            name: playlist_item[:name],
-            description: playlist_item[:description]
-          }
-        )
-
-        current_playlist_tracks = playlist.active_tracks
-        tracks = track_items.map { |track_item| Track.find_or_create_from_item(track_item) }
-
-        tracks_to_remove = current_playlist_tracks - tracks
-        PlaylistTrack.active.where(playlist_id: playlist.id, track_id: tracks_to_remove.pluck(:id)).update_all(deleted_at: Time.now)
-
-        tracks_to_add = tracks - current_playlist_tracks
-        playlist.tracks << tracks_to_add
-
-        return playlist
+      playlist = Playlist.find_or_create_by!(id: playlist_item[:id]) do |pl|
+        pl.name = playlist_item[:name]
+        pl.description = playlist_item[:description]
       end
+
+      current_playlist_tracks = playlist.active_tracks
+      tracks = track_items.map { |track_item| Track.find_or_create_from_item(track_item) }
+
+      tracks_to_remove = current_playlist_tracks - tracks
+      if tracks_to_remove.any?
+        PlaylistTrack.active.where(playlist_id: playlist.id, track_id: tracks_to_remove.pluck(:id)).update_all(deleted_at: Time.now)
+      end
+
+      tracks_to_add = tracks - current_playlist_tracks
+      playlist.tracks << tracks_to_add
+
+      return playlist
     end
   end
 end
