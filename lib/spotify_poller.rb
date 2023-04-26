@@ -19,11 +19,10 @@ class SpotifyPoller
   def run!
     sc = SpotifyClient.new
 
-    run_until = Time.now.change({ hour: DEFAULT_RUN_UNTIL_HOUR, min: 0, sec: 0 })
     previously_playing = nil
     plays_since_augment = 0
 
-    while Time.now < run_until
+    loop do
       resp = sc.get_currently_playing
       sleep_duration = DEFAULT_SLEEP_DURATION
 
@@ -58,7 +57,7 @@ class SpotifyPoller
         Rails.logger.debug('Track is paused')
       else
         # TODO: Should probably make this more robust, ie retries
-        Rails.logger.warn 'Encountered response error, stopping!'
+        Rails.logger.error 'Encountered response error, stopping!'
         break
       end
 
