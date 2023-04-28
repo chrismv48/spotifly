@@ -6,8 +6,8 @@ class SpotifyPlaylist
 
   DESCRIPTION_KEYWORD = '!dynamic' # let's us know this playlist should be considered
   MAX_PLAYLIST_SIZE = 100
-  MIN_PLAYLIST_SIZE = 20
-  TARGET_PCT_TRACKS_PLAYED = 0.65
+  MIN_PLAYLIST_SIZE = 10
+  TARGET_PCT_TRACKS_PLAYED = 0.8
   SKIP_RATE_THRESHOLD = 0.5
   LAST_N_PLAYS_TO_CONSIDER = 5
 
@@ -93,9 +93,9 @@ class SpotifyPlaylist
   end
 
   def num_tracks_to_add
-    current_count = @playlist.active_tracks.size
-    num_played_tracks = @playlist.active_tracks.includes(:plays).count { |track| track.plays.any? }
-    new_count = [(num_played_tracks / TARGET_PCT_TRACKS_PLAYED).to_i, current_count].max
+    current_count = @playlist.active_tracks.count
+    num_tracks_played_n_times = @playlist.active_tracks.includes(:plays).count { |track| track.plays.count >= 3 }
+    new_count = [(num_tracks_played_n_times / TARGET_PCT_TRACKS_PLAYED).to_i, current_count].max
     return [new_count.clamp(MIN_PLAYLIST_SIZE, MAX_PLAYLIST_SIZE) - current_count, 0].max
   end
 
