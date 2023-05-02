@@ -76,11 +76,13 @@ class SpotifyPoller
 
   def build_currently_playing(parsed_response)
     item, context = parsed_response['item'], parsed_response['context']
+    spotify_uri = context&.dig('uri') || ''
+    playlist_id = spotify_uri[/.*playlist:(.*)/, 1]
     return {
       play: {
         track_id: item['id'],
         progress_ms: parsed_response['progress_ms'],
-        playlist_id: context['uri'][/.*playlist:(.*)/, 1]
+        playlist_id:
       },
       track: {
         id: item['id'],
