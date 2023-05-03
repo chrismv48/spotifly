@@ -29,6 +29,11 @@ class SpotifyPoller
       if resp.code == 200 && resp.parse['is_playing']
         parsed_resp = resp.parse
 
+        if parsed_resp['currently_playing_type'] != 'track'
+          Rails.logger.debug('Currently playing is not a track, skipping...')
+          next
+        end
+
         currently_playing = build_currently_playing(parsed_resp)
 
         Rails.logger.info("Playing track: #{currently_playing[:track][:name]} by #{currently_playing[:track][:artists].pluck(:name).to_sentence}")

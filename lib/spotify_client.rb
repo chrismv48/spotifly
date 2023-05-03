@@ -103,7 +103,6 @@ class SpotifyClient
 
   def get_currently_playing
     api_get("#{BASE_URL}/player/currently-playing")
-
   end
 
   def get_playlists(limit: 50, offset: 0)
