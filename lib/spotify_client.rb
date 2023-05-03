@@ -127,7 +127,6 @@ class SpotifyClient
     }
 
     api_get("https://api.spotify.com/v1/playlists/#{playlist_id}/tracks", params:)
-
   end
 
   def get_recommended_tracks(seed_track_ids:)

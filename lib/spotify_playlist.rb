@@ -110,7 +110,7 @@ class SpotifyPlaylist
         next unless dynamic?(description: playlist_item['description'])
 
         tracks_resp = client.get_playlist_tracks(playlist_item['id'])
-        track_items = tracks_resp.parse['items'].pluck('track')
+        track_items = tracks_resp.parse['items'].pluck('track').reject(&:blank?)
 
         playlist = Playlist.create_from_item(playlist_item, track_items:)
 
