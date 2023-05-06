@@ -44,7 +44,7 @@ class SpotifyClient
     @user_token_data = SpotifyUserToken.find_or_create_by!(user_id:)
     # TODO: see if there's a way to make this less noisy, or maybe to set it to debug level
     http_logger = Logger.new($stdout)
-    http_logger.level = :debug
+    http_logger.level = :error
     @http = HTTP.use(logging: { logger: http_logger })
     @consecutive_failed_requests = 0
     return unless @user_token_data.access_token.nil?
